@@ -41,7 +41,7 @@ var allLocations = {};
 
 var gp={}
 var mWidth,mHeight
-
+var gpsPermission = false;
 var osc, envelope, fft;
 var oscs = [];
 var mymap 
@@ -103,6 +103,18 @@ function setup(){
 //   osc.start();
   
 }
+var settingStr = getSettingStr();
+function getSettingStr() {
+  var userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    if (/android|windows phone/i.test(userAgent)) {
+      return "1. Open the Chrome app.\n\n2. Find and tap Settings.\n\n3. Tap Site settings > Location.\n\n4. Turn Location on.";
+    }
+    // iOS detection from: http://stackoverflow.com/a/9039885/177710
+    if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      return "1. Open the settings app.\n\n2. Find and tap Safari/Chrome.\n\n3. Tap Location.\n\n4. Select \"While Using the App\".";
+    }
+    return "Enable Location Permission";
+}
 
 function windowResized(){
   resizeCanvas(windowWidth,windowHeight)
@@ -151,13 +163,43 @@ function draw(){
   for(var i=0;i<width;i+=span){
     line(i,0,i,height)
   }
-  
+
   push()
     stroke(255)
     strokeWeight(15)
     noFill()
     rect(0,0,width,height)
   pop()
+
+  if (gpsPermission)
+    drawGPS();
+  else drawSetting();
+
+}
+
+function drawSetting() {
+
+  push()
+    translate(width/2,height/2)
+    textSize(20)
+    fill(255,255)
+    text("FOR BEING A PART OF\nSONG OF DISTANCE", 0, -120);
+    textSize(15)
+    fill(200)
+
+    textAlign(LEFT);
+    text(settingStr, -100,-30);
+
+
+  pop()
+}
+
+
+function drawGPS() {
+  counter++
+  
+  
+  
   
   textAlign(CENTER)
   
@@ -238,33 +280,31 @@ function draw(){
 }
 
 var x = document.getElementById("demo");
-var watchID = navigator.geolocation.watchPosition(showPosition);
-navigator.permissions.query({
-    name: 'geolocation'
-  }).then(function(result) {
-  alert('hello?');
-  if (result.state == 'granted') {
-      //report(result.state);
-      //geoBtn.style.display = 'none';
-      alert('granted!');
-      watchID = navigator.geolocation.watchPosition(showPosition);
-  } else if (result.state == 'prompt') {
-      //report(result.state);
-      //geoBtn.style.display = 'none';
-      alert('prompt!');
-      //watchID = navigator.geolocation.watchPosition(showPosition);
-      //navigator.geolocation.getCurrentPosition(revealPosition, positionDenied, geoSettings);
-  } else if (result.state == 'denied') {
-      //report(result.state);
-      //geoBtn.style.display = 'inline';
-      alert('denied!');
-  }
-  result.onchange = function() {
-      alert(result.state);
-  }
-});
+var watchID = navigator.geolocation.watchPosition(showPosition, watchPositionError);
+// navigator.geolocation.getCurrentPosition(
+//   function(position) { /** won't be executed for such short timeout */ },
+//   function(positionError) {
+//     switch (positionError.code) {
+//       // PERMISSION_DENIED
+//       case 1:
+//         console.log('Permission denied')
+//         break
+//       // POSITION_UNAVAILABLE
+//       case 2:
+//         console.log('Permission allowed, location disabled')
+//         break
+//       // TIMEOUT
+//       case 3:
+//         console.log('Permission allowed, timeout reached')
+//         break
+//       }
+//   },
+//   {timeout: 0}
+// )
 var initPos = false
 function showPosition(position) {
+  gpsPermission = true;
+  count = 0;
   gp=  {
     key: myId,
     showId: getShowId(),
@@ -276,11 +316,28 @@ function showPosition(position) {
   earthLocationRefs.child(myId).set(gp)
   if (!initPos ){
     if (gp.lat){
-
       mymap.setView([gp.lat,gp.lon],3)
       initPos=true
     }
   }
+}
+
+function watchPositionError(positionError)  {
+  gpsPermission = false;
+  switch (positionError.code) {
+    // PERMISSION_DENIED
+    case 1:
+      console.log('Permission denied')
+      break
+    // POSITION_UNAVAILABLE
+    case 2:
+      console.log('Permission allowed, location disabled')
+      break
+    // TIMEOUT
+    case 3:
+      console.log('Permission allowed, timeout reached')
+      break
+    }
 }
 // if (navigator.geolocation) {
 //     navigator.geolocation.getCurrentPosition(function(position) {
