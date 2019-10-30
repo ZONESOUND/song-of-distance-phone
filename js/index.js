@@ -238,7 +238,7 @@ function draw(){
 }
 
 var x = document.getElementById("demo");
-//var watchID = navigator.geolocation.watchPosition(showPosition);
+var watchID = navigator.geolocation.watchPosition(showPosition);
 navigator.permissions.query({
     name: 'geolocation'
   }).then(function(result) {
