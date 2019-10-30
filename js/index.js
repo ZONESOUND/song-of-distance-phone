@@ -238,7 +238,31 @@ function draw(){
 }
 
 var x = document.getElementById("demo");
-var watchID = navigator.geolocation.watchPosition(showPosition);
+//var watchID = navigator.geolocation.watchPosition(showPosition);
+navigator.permissions.query({
+    name: 'geolocation'
+  }).then(function(result) {
+  alert('hello?');
+  if (result.state == 'granted') {
+      //report(result.state);
+      //geoBtn.style.display = 'none';
+      alert('granted!');
+      watchID = navigator.geolocation.watchPosition(showPosition);
+  } else if (result.state == 'prompt') {
+      //report(result.state);
+      //geoBtn.style.display = 'none';
+      alert('prompt!');
+      //watchID = navigator.geolocation.watchPosition(showPosition);
+      //navigator.geolocation.getCurrentPosition(revealPosition, positionDenied, geoSettings);
+  } else if (result.state == 'denied') {
+      //report(result.state);
+      //geoBtn.style.display = 'inline';
+      alert('denied!');
+  }
+  result.onchange = function() {
+      alert(result.state);
+  }
+});
 var initPos = false
 function showPosition(position) {
   gp=  {
